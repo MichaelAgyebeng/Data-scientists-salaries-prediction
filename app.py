@@ -66,7 +66,8 @@ if st.button('Predict Salary'):
     # This is a simplified representation; ideally, load the original data structure.
     dummy_data = pd.DataFrame(columns=categorical_features + numerical_features)
     # Append the input data to the dummy data for fitting purposes
-    dummy_data = dummy_data.append(input_data, ignore_index=True)
+    dummy_data = pd.concat([dummy_data, input_data], ignore_index=True)
+
 
 
     # Recreate and fit the preprocessor (less ideal than loading fitted preprocessor)
