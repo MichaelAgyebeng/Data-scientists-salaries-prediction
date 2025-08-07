@@ -69,7 +69,6 @@ if st.button('Predict Salary'):
     dummy_data = pd.concat([dummy_data, input_data], ignore_index=True)
 
 
-
     # Recreate and fit the preprocessor (less ideal than loading fitted preprocessor)
     numerical_transformer = StandardScaler()
     categorical_transformer = OneHotEncoder(handle_unknown='ignore')
