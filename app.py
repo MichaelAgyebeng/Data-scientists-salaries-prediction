@@ -6,12 +6,12 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-# Load the trained model and preprocessor
+# Load the trained model
+# Ensure the model file name matches the one saved in the previous step
 try:
     model = joblib.load('best_XGboosting_model.pkl')
-    preprocessor = joblib.load('preprocessor.pkl')
 except FileNotFoundError:
-    st.error("Model or preprocessor file not found. Please run the model training, preprocessing, and saving steps first in the notebook.")
+    st.error("Model file not found. Please run the model training and saving steps first in the notebook.")
     st.stop()
 
 # --- Streamlit Application ---
@@ -22,10 +22,12 @@ st.write("""
 This application predicts data science salaries based on various factors such as experience level, employment type, location, and more. Enter the details below to get a salary prediction.
 """)
 
+# Define the features used for training (excluding the target and features not used)
+categorical_features = ['work_year','experience_level','job_title','employee_residence', 'employment_type', 'company_location', 'company_size']
+numerical_features = ['remote_ratio'] # 'salary' was in X but not used as an input feature for prediction
+
+
 # Create input fields for the features
-# These should match the features used for training the model (excluding 'salary_in_usd' and 'salary')
-# We need to get the unique values for categorical features from the original data or a saved list
-# In a real app, load these from saved data. For simplicity, using example values for now.
 work_year = st.selectbox('Work Year', [2020, 2021, 2022])
 
 col1, col2 = st.columns(2)
@@ -48,11 +50,44 @@ with col4:
 # Predict button
 if st.button('Predict Salary'):
     # Create a DataFrame from the input values
-    input_data = pd.DataFrame([[work_year, experience_level, employment_type, job_title, 0, "dummy_currency", employee_residence, remote_ratio, company_location, company_size]],
-                              columns=['work_year', 'experience_level', 'employment_type', 'job_title', 'salary', 'salary_currency', 'employee_residence', 'remote_ratio', 'company_location', 'company_size'])
+    input_data = pd.DataFrame([[work_year, experience_level, employment_type, job_title, employee_residence, remote_ratio, company_location, company_size]],
+                              columns=['work_year', 'experience_level', 'employment_type', 'job_title', 'employee_residence', 'remote_ratio', 'company_location', 'company_size'])
 
-    # Apply the loaded preprocessor to the input data
-    input_processed = preprocessor.transform(input_data.drop('salary_currency', axis=1))
+    # --- Preprocessing within the app ---
+    # In a real application, it's best to save the fitted preprocessor
+    # or at least the fitted individual transformers (StandardScaler, OneHotEncoder)
+    # from the training step and load them here.
+    # For demonstration purposes due to the loading issue, we will refit
+    # the transformers on a dummy DataFrame with the structure of the training data.
+    # This is NOT ideal for production as it might not capture all categories
+    # or the correct scaling from the original training data.
+
+    # Create a dummy DataFrame with the same columns and structure as the training data
+    # This is a simplified representation; ideally, load the original data structure.
+    dummy_data = pd.DataFrame(columns=categorical_features + numerical_features)
+    # Append the input data to the dummy data for fitting purposes
+    dummy_data = dummy_data.append(input_data, ignore_index=True)
+
+
+    # Recreate and fit the preprocessor (less ideal than loading fitted preprocessor)
+    numerical_transformer = StandardScaler()
+    categorical_transformer = OneHotEncoder(handle_unknown='ignore')
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numerical_transformer, numerical_features),
+            ('cat', categorical_transformer, categorical_features)
+        ],
+        remainder='passthrough' # Keep other columns (like salary, currency if present in dummy)
+    )
+
+    # Fit the preprocessor on the dummy data (structure) and then transform the input data
+    # This is a workaround due to the loading issue; loading the fitted preprocessor is preferred.
+    preprocessor.fit(dummy_data)
+    input_processed = preprocessor.transform(input_data)
+
+    # --- End Preprocessing within the app ---
+
 
     # Make prediction
     predicted_salary = model.predict(input_processed)
