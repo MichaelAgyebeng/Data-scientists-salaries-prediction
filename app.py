@@ -35,7 +35,6 @@ with col2:
     employment_type = st.selectbox('Employment Type', ['FT', 'CT', 'PT', 'FL'])
 
 job_title = st.selectbox('Job Title', ['Data Scientist', 'Machine Learning Scientist', 'Big Data Engineer', 'Product Data Analyst', 'Machine Learning Engineer', 'Data Analyst', 'Lead Data Scientist', 'Business Data Analyst', 'Lead Data Engineer', 'Lead Data Analyst', 'Data Engineer', 'Data Science Consultant', 'BI Data Analyst', 'Research Scientist', 'Machine Learning Manager', 'Data Engineering Manager', 'Machine Learning Infrastructure Engineer', 'ML Engineer', 'AI Scientist', 'Computer Vision Engineer', 'Principal Data Scientist', 'Data Science Manager', 'Head of Data', '3D Computer Vision Researcher', 'Data Analytics Engineer', 'Applied Data Scientist', 'Director of Data Science', 'Marketing Data Analyst', 'Cloud Data Engineer', 'Computer Vision Software Engineer', 'Director of Data Engineering', 'Data Science Engineer', 'Principal Data Engineer', 'Machine Learning Developer', 'Applied Machine Learning Scientist', 'Data Analytics Manager', 'Head of Data Science', 'Data Specialist', 'Data Architect', 'Finance Data Analyst', 'Principal Data Analyst', 'Big Data Architect', 'Staff Data Scientist', 'Analytics Engineer', 'ETL Developer', 'Head of Machine Learning', 'NLP Engineer', 'Lead Machine Learning Engineer', 'Financial Data Analyst'])
-salary_currency = st.selectbox('Salary Currency', ['EUR', 'USD', 'GBP', 'HUF', 'INR', 'MXN', 'TRY', 'CAD', 'DKK', 'PLN', 'AED', 'JPY', 'CNY', 'SGD', 'CLP', 'BRL', 'NZD', 'PHP'])
 employee_residence = st.selectbox('Employee Residence', ['DE', 'JP', 'GB', 'HN', 'US', 'HU', 'NZ', 'FR', 'IN', 'PK', 'CN', 'GR', 'AE', 'NL', 'MX', 'CA', 'RU', 'ES', 'DZ', 'NG', 'MY', 'TR', 'AU', 'IQ', 'HR', 'IL', 'UA', 'LB', 'SG', 'SI', 'AT', 'PR', 'RS', 'IE', 'KE', 'SA', 'SK', 'BD', 'CZ', 'JE', 'CH', 'CL', 'LT', 'MK', 'BO', 'PH', 'KR', 'EE', 'IR', 'CO', 'IT', 'CY'])
 remote_ratio = st.selectbox('Remote Ratio', [0, 50, 100])
 
@@ -49,11 +48,11 @@ with col4:
 # Predict button
 if st.button('Predict Salary'):
     # Create a DataFrame from the input values
-    input_data = pd.DataFrame([[work_year, experience_level, employment_type, job_title, 0, salary_currency, employee_residence, remote_ratio, company_location, company_size]],
+    input_data = pd.DataFrame([[work_year, experience_level, employment_type, job_title, 0, "dummy_currency", employee_residence, remote_ratio, company_location, company_size]],
                               columns=['work_year', 'experience_level', 'employment_type', 'job_title', 'salary', 'salary_currency', 'employee_residence', 'remote_ratio', 'company_location', 'company_size'])
 
     # Apply the loaded preprocessor to the input data
-    input_processed = preprocessor.transform(input_data)
+    input_processed = preprocessor.transform(input_data.drop('salary_currency', axis=1))
 
     # Make prediction
     predicted_salary = model.predict(input_processed)
