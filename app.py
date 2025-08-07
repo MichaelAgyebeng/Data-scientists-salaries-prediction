@@ -76,8 +76,8 @@ if st.button('Predict Salary'):
     # to ensure the columns align for the one-hot encoding.
     # This part needs to be robust in a real application.
     # Let's create a dummy preprocessor just for the structure
-    dummy_X = pd.DataFrame(columns=['work_year','experience_level', 'employment_type', 'job_title', 'salary', 'salary_currency', 'employee_residence', 'remote_ratio', 'company_location', 'company_size'])
-    dummy_X = dummy_X.append(input_data, ignore_index=True)
+    # dummy_X = pd.DataFrame(columns=['work_year','experience_level', 'employment_type', 'job_title', 'salary', 'salary_currency', 'employee_residence', 'remote_ratio', 'company_location', 'company_size'])
+    # dummy_X = dummy_X.append(input_data, ignore_index=True)
 
     # Fit the preprocessor on dummy data to get the structure (not ideal)
     # In a real app, load the fitted preprocessor
