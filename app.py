@@ -1,126 +1,63 @@
-import streamlit as st
+# Load preprocessor and model
 import joblib
 import pandas as pd
+import streamlit as st
 
-# --- Load the trained model ---
-try:
-    model = joblib.load('best_XGboosting_model.pkl')
-except FileNotFoundError:
-    st.error("Model file not found. Please run the model training and saving steps first.")
-    st.stop()
+preprocessor = joblib.load('preprocessor.pkl')
+model = joblib.load('model.pkl')
 
-# --- Load the fitted preprocessor ---
-try:
-    preprocessor = joblib.load('preprocessor.pkl')
-except FileNotFoundError:
-    st.error("Preprocessor file not found. Please train and save it first.")
-    st.stop()
+# These must match the order used when training
+categorical_features = ['work_year', 'experience_level', 'employment_type',
+                        'job_title', 'employee_residence', 'company_location',
+                        'company_size']
+numeric_features = ['remote_ratio']
+
+# --- Helper: check missing fields ---
+def check_missing_fields(input_df):
+    missing = [col for col in input_df.columns if pd.isnull(input_df[col].iloc[0]) or input_df[col].iloc[0] == ""]
+    return missing
+
+# --- Helper: check unseen categories ---
+def check_unseen_categories(input_df):
+    unseen_messages = []
+    cat_transformer = preprocessor.named_transformers_['cat']  # The categorical pipeline
+    ohe = cat_transformer.named_steps['onehot']                # The OneHotEncoder
+    
+    for col, categories in zip(categorical_features, ohe.categories_):
+        value = input_df[col].iloc[0]
+        if value not in categories:
+            unseen_messages.append(f"**{col}** → '{value}' (not seen during training)")
+    return unseen_messages
 
 # --- Streamlit UI ---
-st.title('Salary Prediction App')
+st.title("Data Scientist Salary Prediction")
 
-st.write("""
-This application predicts data science salaries based on factors such as experience level, job title, location, and more.
-""")
+# Collect user inputs
+user_inputs = {
+    'work_year': st.selectbox('Work Year', ['2020', '2021', '2022', '2023']),
+    'experience_level': st.selectbox('Experience Level', ['EN', 'MI', 'SE', 'EX']),
+    'employment_type': st.selectbox('Employment Type', ['FT', 'PT', 'CT', 'FL']),
+    'job_title': st.text_input('Job Title'),
+    'employee_residence': st.text_input('Employee Residence (e.g., US, GB, IN)'),
+    'remote_ratio': st.number_input('Remote Ratio (%)', min_value=0, max_value=100, step=1),
+    'company_location': st.text_input('Company Location (e.g., US, GB, IN)'),
+    'company_size': st.selectbox('Company Size', ['S', 'M', 'L'])
+}
 
-categorical_features = [
-    'work_year', 'experience_level', 'job_title', 'employee_residence',
-    'employment_type', 'company_location', 'company_size'
-]
-numerical_features = ['remote_ratio']
+input_data = pd.DataFrame([user_inputs])
 
-# Input fields
-work_year = st.selectbox('Work Year', [2020, 2021, 2022])
-
-col1, col2 = st.columns(2)
-with col1:
-    experience_level = st.selectbox('Experience Level', ['MI', 'SE', 'EN', 'EX'])
-with col2:
-    employment_type = st.selectbox('Employment Type', ['FT', 'CT', 'PT', 'FL'])
-
-job_title = st.selectbox('Job Title', [
-    'Data Scientist', 'Machine Learning Scientist', 'Big Data Engineer', 'Product Data Analyst',
-    'Machine Learning Engineer', 'Data Analyst', 'Lead Data Scientist', 'Business Data Analyst',
-    'Lead Data Engineer', 'Lead Data Analyst', 'Data Engineer', 'Data Science Consultant',
-    'BI Data Analyst', 'Research Scientist', 'Machine Learning Manager', 'Data Engineering Manager',
-    'Machine Learning Infrastructure Engineer', 'ML Engineer', 'AI Scientist', 'Computer Vision Engineer',
-    'Principal Data Scientist', 'Data Science Manager', 'Head of Data', '3D Computer Vision Researcher',
-    'Data Analytics Engineer', 'Applied Data Scientist', 'Director of Data Science', 'Marketing Data Analyst',
-    'Cloud Data Engineer', 'Computer Vision Software Engineer', 'Director of Data Engineering',
-    'Data Science Engineer', 'Principal Data Engineer', 'Machine Learning Developer',
-    'Applied Machine Learning Scientist', 'Data Analytics Manager', 'Head of Data Science',
-    'Data Specialist', 'Data Architect', 'Finance Data Analyst', 'Principal Data Analyst',
-    'Big Data Architect', 'Staff Data Scientist', 'Analytics Engineer', 'ETL Developer',
-    'Head of Machine Learning', 'NLP Engineer', 'Lead Machine Learning Engineer', 'Financial Data Analyst'
-])
-
-employee_residence = st.selectbox('Employee Residence', [
-    'DE', 'JP', 'GB', 'HN', 'US', 'HU', 'NZ', 'FR', 'IN', 'PK', 'CN', 'GR', 'AE', 'NL',
-    'MX', 'CA', 'RU', 'ES', 'DZ', 'NG', 'MY', 'TR', 'AU', 'IQ', 'HR', 'IL', 'UA', 'LB',
-    'SG', 'SI', 'AT', 'PR', 'RS', 'IE', 'KE', 'SA', 'SK', 'BD', 'CZ', 'JE', 'CH', 'CL',
-    'LT', 'MK', 'BO', 'PH', 'KR', 'EE', 'IR', 'CO', 'IT', 'CY'
-])
-
-remote_ratio = st.selectbox('Remote Ratio', [0, 50, 100])
-
-col3, col4 = st.columns(2)
-with col3:
-    company_location = st.selectbox('Company Location', [
-        'DE', 'JP', 'GB', 'HN', 'US', 'HU', 'NZ', 'FR', 'IN', 'PK', 'CN', 'GR', 'AE', 'NL',
-        'MX', 'CA', 'RU', 'ES', 'DZ', 'NG', 'MY', 'TR', 'AU', 'IQ', 'HR', 'IL', 'UA', 'LB',
-        'SG', 'SI', 'AT', 'PR', 'RS', 'IE', 'KE', 'SA', 'SK', 'BD', 'CZ', 'JE', 'CH', 'CL',
-        'LT', 'MK', 'BO', 'PH', 'KR', 'EE', 'IR', 'CO', 'IT', 'CY'
-    ])
-with col4:
-    company_size = st.selectbox('Company Size', ['S', 'M', 'L'])
-
-# Predict button
-if st.button('Predict Salary'):
-    # Prepare DataFrame
-    input_data = pd.DataFrame([[
-        work_year, experience_level, employment_type, job_title,
-        employee_residence, remote_ratio, company_location, company_size
-    ]], columns=[
-        'work_year', 'experience_level', 'employment_type', 'job_title',
-        'employee_residence', 'remote_ratio', 'company_location', 'company_size'
-    ])
-
-    expected_columns = preprocessor.feature_names_in_
-
-    # Create a dict with default values for all expected columns
-    input_dict = {col: None for col in expected_columns}
-    
-    # Fill with user input
-    input_dict.update({
-        'work_year': work_year,
-        'experience_level': experience_level,
-        'employment_type': employment_type,
-        'job_title': job_title,
-        'employee_residence': employee_residence,
-        'remote_ratio': remote_ratio,
-        'company_location': company_location,
-        'company_size': company_size
-    })
-    
-    # Make DataFrame in correct order
-    input_data = pd.DataFrame([input_dict])[expected_columns]
-
-    # Find which columns are null
-    missing_cols = input_data.columns[input_data.isnull().any()].tolist()
-    
-    if missing_cols:
-        st.warning(f"The following fields are missing: {', '.join(missing_cols)}")
-        st.stop()
-
-    # Validate inputs
-    if input_data.isnull().values.any():
-        st.warning("Please fill in all inputs correctly.")
-        st.stop()
-
-    # Preprocess input using loaded preprocessor
-    input_processed = preprocessor.transform(input_data)
-
-    # Predict
-    predicted_salary = model.predict(input_processed)
-
-    st.success(f"Estimated annual salary: ${predicted_salary[0]:,.2f}")
+if st.button("Predict Salary"):
+    # 1. Check for missing fields
+    missing = check_missing_fields(input_data)
+    if missing:
+        st.warning("The following fields are missing:\n" + "\n".join(missing))
+    else:
+        # 2. Check for unseen categories
+        unseen = check_unseen_categories(input_data)
+        if unseen:
+            st.warning("The following inputs were not seen during training:\n" + "\n".join(unseen))
+        
+        # 3. Transform & predict
+        input_processed = preprocessor.transform(input_data)
+        prediction = model.predict(input_processed)
+        st.success(f"Predicted Salary: ${prediction[0]:,.2f}")
