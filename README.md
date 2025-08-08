@@ -42,12 +42,22 @@ The project is structured as follows:
 
 ## Getting Started
 
-### Prerequisites
-
-*   Python 3.6+
-*   Jupyter Notebook (or Google Colab)
-*   Required Python packages (listed in `requirements.txt`)
-
-### Installation
-
-1.  Clone the repository:
+### Abbreaviations
+* `Experience`
+      EN: Entry-level / Junior
+       MI: Mid-level / Intermediate
+       SE: Senior-level / Expert
+       EX: Executive-level / Director
+* `employment_type`
+       PT: Part-time
+       FT: Full-time
+       CT: Contract
+       FL: Freelance
+* `remote_ratio`
+      0: No remote work (less than 20%)
+     50: Partially remote/hybird
+    100: Fully remote (more than 80%)
+* `company_size`
+      S: less than 50 employees (small)
+      M: 50 to 250 employees (medium)
+      L: more than 250 employees (large)
