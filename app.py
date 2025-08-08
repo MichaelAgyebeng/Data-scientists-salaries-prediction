@@ -85,6 +85,26 @@ if st.button('Predict Salary'):
         'employee_residence', 'remote_ratio', 'company_location', 'company_size'
     ])
 
+    expected_columns = preprocessor.feature_names_in_
+
+    # Create a dict with default values for all expected columns
+    input_dict = {col: None for col in expected_columns}
+    
+    # Fill with user input
+    input_dict.update({
+        'work_year': work_year,
+        'experience_level': experience_level,
+        'employment_type': employment_type,
+        'job_title': job_title,
+        'employee_residence': employee_residence,
+        'remote_ratio': remote_ratio,
+        'company_location': company_location,
+        'company_size': company_size
+    })
+    
+    # Make DataFrame in correct order
+    input_data = pd.DataFrame([input_dict])[expected_columns]
+
     # Validate inputs
     if input_data.isnull().values.any():
         st.warning("Please fill in all inputs correctly.")
