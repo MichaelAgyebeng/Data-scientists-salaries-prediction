@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 preprocessor = joblib.load('preprocessor.pkl')
-model = joblib.load('model.pkl')
+model = joblib.load('best_XGboosting_model.pkl')
 
 # These must match the order used when training
 categorical_features = ['work_year', 'experience_level', 'employment_type',
