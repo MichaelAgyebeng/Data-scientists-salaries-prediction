@@ -105,6 +105,13 @@ if st.button('Predict Salary'):
     # Make DataFrame in correct order
     input_data = pd.DataFrame([input_dict])[expected_columns]
 
+    # Find which columns are null
+    missing_cols = input_data.columns[input_data.isnull().any()].tolist()
+    
+    if missing_cols:
+        st.warning(f"The following fields are missing: {', '.join(missing_cols)}")
+        st.stop()
+
     # Validate inputs
     if input_data.isnull().values.any():
         st.warning("Please fill in all inputs correctly.")
